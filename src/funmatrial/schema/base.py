@@ -17,6 +17,7 @@ class MaterialInfo(dict):
         super().__init__(type=type, url=url, *args, **kwargs)
         self.provider = provider
         self.type = type
+        self.url = url
 
 
 class VideoInfo(MaterialInfo):
