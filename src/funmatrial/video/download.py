@@ -187,6 +187,7 @@ def save_video(video_url: str, save_dir: str = "", *args, **kwargs) -> str:
 
 
 def download_videos(
+    api_key: str,
     search_terms: List[str],
     source: str = "pexels",
     material_directory="./material",
@@ -204,7 +205,7 @@ def download_videos(
 
     for search_term in search_terms:
         video_items = search_videos(
-            api_key="47185972-6e4df4d1ae5a464cbad11832f",
+            api_key=api_key,
             search_term=search_term,
             minimum_duration=max_clip_duration,
             video_aspect=video_aspect,
