@@ -286,7 +286,7 @@ def download_videos(
     api_key: str,
     search_terms: List[str],
     source: str = "pexels",
-    material_directory="./material",
+    material_directory="./material/video",
     video_aspect: VideoAspect = VideoAspect.portrait,
     video_contact_mode: VideoConcatMode = VideoConcatMode.random,
     audio_duration: float = 0.0,
