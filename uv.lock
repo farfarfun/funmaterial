@@ -131,6 +131,15 @@ wheels = [
 ]
 
 [[package]]
+name = "funfake"
+version = "1.0.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6d/18/319c4821d451fd8fab13ebe2726ce6d748a5f90b356ea33aa93dcefa3470/funfake-1.0.6.tar.gz", hash = "sha256:75b4bb71ed3de4ed74229c27cf6f6ba594cb854c50dc154e7b7d4fd270c3d032", size = 10557 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b9/78/c2c5baf8d8d5bee40658809cdcf5903227bae3462fa2f6656abcb481500f/funfake-1.0.6-py3-none-any.whl", hash = "sha256:2664cf6c7cebdae9b0d89f285c7b18da9c67ce300071c54c36f3b560de71133e", size = 11439 },
+]
+
+[[package]]
 name = "funfile"
 version = "1.0.12"
 source = { registry = "https://pypi.org/simple" }
@@ -157,14 +166,18 @@ wheels = [
 
 [[package]]
 name = "funmaterial"
-version = "1.0.16"
+version = "1.0.17"
 source = { virtual = "." }
 dependencies = [
+    { name = "funfake" },
     { name = "funget" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "funget", specifier = ">=1.0.22" }]
+requires-dist = [
+    { name = "funfake", specifier = ">=1.0.6" },
+    { name = "funget", specifier = ">=1.0.22" },
+]
 
 [[package]]
 name = "funutil"
