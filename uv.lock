@@ -259,6 +259,21 @@ wheels = [
 ]
 
 [[package]]
+name = "fundrive"
+version = "1.2.60"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "funget" },
+    { name = "funsecret" },
+    { name = "orjson" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/73/4f/b15cc2df0253a33534a605a1d161b80b5e56b966c39d2c138ea1909812a1/fundrive-1.2.60.tar.gz", hash = "sha256:00530a88911a37b57547b7b3224d7cae5cc108be807522b9773722c750079186", size = 35780 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/1d/dbf9b221de65afd38ab835d90ed3baf7c5751ad4ef23a9af61b1c68f5669/fundrive-1.2.60-py3-none-any.whl", hash = "sha256:c674623f205b73ff86616804831dd6c36b98a97e6606df2db1cf5b1d6de33388", size = 44344 },
+]
+
+[[package]]
 name = "funfake"
 version = "1.0.6"
 source = { registry = "https://pypi.org/simple" }
@@ -294,9 +309,10 @@ wheels = [
 
 [[package]]
 name = "funmaterial"
-version = "1.0.18"
+version = "1.0.19"
 source = { virtual = "." }
 dependencies = [
+    { name = "fundrive" },
     { name = "funfake" },
     { name = "funget" },
     { name = "funsecret" },
@@ -304,6 +320,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "fundrive", specifier = ">=1.2.60" },
     { name = "funfake", specifier = ">=1.0.6" },
     { name = "funget", specifier = ">=1.0.22" },
     { name = "funsecret", specifier = ">=1.4.29" },
