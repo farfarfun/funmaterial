@@ -8,9 +8,9 @@ from urllib.parse import urlencode
 import requests
 from funfake.headers import fake_header
 from funget import simple_download
-from funmatrial.api.pixabay import PixabayAPI
-from funmatrial.schema import VideoInfo, ProviderType
-from funmatrial.video.schema import VideoAspect, VideoConcatMode
+from funmaterial.api.pixabay import PixabayAPI
+from funmaterial.schema import VideoInfo, ProviderType
+from funmaterial.video.schema import VideoAspect, VideoConcatMode
 from funutil import getLogger
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
