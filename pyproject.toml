@@ -1,7 +1,7 @@
 [project]
 name = "funmaterial"
-version = "1.0.22"
+version = "1.0.23"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [ "fundrive>=1.2.60", "funfake>=1.0.6", "nltget>=1.1.62", "nltsecret>=1.4.83",]
+dependencies = [ "fundrive>=1.2.60", "funfake>=1.0.6", "funget>=1.1.63", "funsecret>=1.4.84",]

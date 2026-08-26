@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 import requests
 from funfake.headers import fake_header
-from nltget import simple_download
+from funget import simple_download
 from funmaterial.api.pixabay import PixabayAPI
 from funmaterial.schema import VideoInfo, ProviderType
 from funmaterial.video.schema import VideoAspect, VideoConcatMode

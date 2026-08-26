@@ -1,4 +1,4 @@
-from nltsecret import read_secret
+from funsecret import read_secret
 from requests import get
 
 

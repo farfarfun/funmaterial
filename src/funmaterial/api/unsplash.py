@@ -1,5 +1,5 @@
 import requests
-from nltsecret import read_secret
+from funsecret import read_secret
 
 
 class Unsplash:
