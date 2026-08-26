@@ -3,11 +3,10 @@ from enum import Enum
 import pydantic
 
 
-class _Config:
-    arbitrary_types_allowed = True
+_CONFIG = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
 
-@pydantic.dataclasses.dataclass(config=_Config)
+@pydantic.dataclasses.dataclass(config=_CONFIG)
 class MaterialInfo:
     provider: str = "pexels"
     url: str = ""

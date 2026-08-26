@@ -1,6 +1,6 @@
 import random
 
-from fundrive import ZenodoDrive
+from fundrive.drives import ZenodoDrive
 from funget import simple_download
 from funutil import getLogger
 
