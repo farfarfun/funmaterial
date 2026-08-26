@@ -3,5 +3,5 @@ name = "funmaterial"
 version = "1.0.22"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.8"
-dependencies = [ "fundrive>=1.2.60", "funfake>=1.0.6", "funget>=1.0.22", "funsecret>=1.4.29",]
+requires-python = ">=3.12"
+dependencies = [ "fundrive>=1.2.60", "funfake>=1.0.6", "nltget>=1.1.62", "nltsecret>=1.4.83",]
