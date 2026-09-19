@@ -1,3 +1,8 @@
+# ---- 组织通用生成物（farfarfun SPEC.md §10）----
+*.db
+.run/
+logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
