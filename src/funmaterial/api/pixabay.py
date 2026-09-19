@@ -1,107 +1,75 @@
+from __future__ import annotations
+
+from typing import Any
+
 from funsecret import read_secret
 from requests import get
 
+from funmaterial.exceptions import MaterialAPIError
+
 
 class PixabayAPI:
-    """
-    @brief Handle Pixabay video and image searches
-    """
+    """Pixabay 图片 / 视频搜索客户端。"""
 
-    def __init__(self, api_key=None, base_url="https://pixabay.com/api/"):
-        """Constructor
-        @param api_key str Your Pixabay API key.
-        @see https://pixabay.com/en/accounts/register/ to register and get an API key.
-        @param base_url: URL for Pixabay API
+    def __init__(
+        self, api_key: str | None = None, base_url: str = "https://pixabay.com/api/"
+    ) -> None:
+        """初始化 Pixabay API 客户端。
+
+        Args:
+            api_key: Pixabay API key。未传时通过 `funsecret` 读取
+                `"funmaterial"/"pixabay"/"api_key"`。注册地址：
+                https://pixabay.com/en/accounts/register/ 。
+            base_url: Pixabay API 根地址。
         """
         self.api_key = api_key or read_secret("funmaterial", "pixabay", "api_key")
         self.base_url = base_url
 
     def search_image(
         self,
-        q,
-        lang="en",
-        id="",
-        response_group="image_details",
-        image_type="all",
-        orientation="all",
-        category="",
-        min_width=0,
-        min_height=0,
-        editors_choice="false",
-        safesearch="false",
-        order="popular",
-        page=1,
-        per_page=20,
-        callback="",
-        pretty="false",
-    ):
+        q: str,
+        lang: str = "en",
+        id: str = "",
+        response_group: str = "image_details",
+        image_type: str = "all",
+        orientation: str = "all",
+        category: str = "",
+        min_width: int = 0,
+        min_height: int = 0,
+        editors_choice: str = "false",
+        safesearch: str = "false",
+        order: str = "popular",
+        page: int = 1,
+        per_page: int = 20,
+        callback: str = "",
+        pretty: str = "false",
+    ) -> dict[str, Any]:
+        """搜索 Pixabay 图片。
+
+        Args:
+            q: 搜索关键词，不超过 100 字符，为空表示返回全部图片。
+            lang: 搜索语言代码（如 en、zh 等）。
+            id: 指定图片 ID / hash ID，多个用逗号分隔。
+            response_group: "image_details" 或 "high_resolution"（需权限）。
+            image_type: "all" / "photo" / "illustration" / "vector"。
+            orientation: "all" / "horizontal" / "vertical"。
+            category: 分类过滤，如 nature、animals 等。
+            min_width: 最小宽度（像素）。
+            min_height: 最小高度（像素）。
+            editors_choice: 是否仅返回编辑精选，"true" / "false"。
+            safesearch: 是否仅返回全年龄向内容，"true" / "false"。
+            order: 排序方式，"popular" 或 "latest"。
+            page: 页码。
+            per_page: 每页结果数，取值 3-200。
+            callback: JSONP 回调函数名。
+            pretty: 是否缩进输出 JSON，生产环境不建议开启。
+
+        Returns:
+            Pixabay 返回的图片搜索结果（已解析的 JSON）。
+
+        Raises:
+            MaterialAPIError: 请求返回非 200 状态码时抛出，携带 URL 与状态码上下文。
         """
-        Image search
-        @brief Search for Pixabay images using default arguments if no optional arguments supplied.
-        @param q str A URL encoded search term. If omitted, all images are returned. This value may not exceed 100 characters.
-        Example: "cat dog"
-        Default: "yellow flower"
-
-        @param lang str Language code of the language to be searched in.
-        Accepted values: cs, da, de, en, es, fr, id, it, hu, nl, no, pl, pt, ro, sk, fi, sv, tr, vi, th, bg, ru, el, ja, ko, zh
-        Default: "en"
-
-        @param id str ID, hash ID, or a comma separated list of values for retrieving specific images.
-        In a comma separated list, IDs and hash IDs cannot be used together.
-        Default: " "
-
-        @param response_group str Choose between retrieving high resolution images and image details.
-        When selecting details, you can access images up to a dimension of 960 x 720 px.
-        Accepted values: "image_details", "high_resolution" (requires permission)
-        Default: "image_details"
-
-        @param image_type str Filter results by image type.
-        Accepted values: "all", "photo", "illustration", "vector"
-        Default: "all"
-
-        @param orientation str Whether an image is wider than it is tall, or taller than it is wide.
-        Accepted values: "all", "horizontal", "vertical"
-        Default: "all"
-
-        @param category str  Filter results by category.
-        Accepted values: fashion, nature, backgrounds, science, education, people, feelings, religion, health, places, animals, industry, food, computer, sports, transportation, travel, buildings, business, music
-        Default: " "
-
-        @param min_width int Minimum image width.
-        Default: 0
-
-        @param min_height int Minimum image height.
-        Default: 0
-
-        @param editors_choice bool Select images that have received an Editor's Choice award.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @param safesearch bool A flag indicating that only images suitable for all ages should be returned.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @param order str How the results should be ordered.
-        Accepted values: "popular", "latest"
-        Default: "popular"
-
-        @param page int Returned search results are paginated. Use this parameter to select the page number.
-        Default: 1
-
-        @param per_page int Determine the number of results per page.
-        Accepted values: 3 - 200
-        Default: 20
-
-        @param callback string JSONP callback function name
-        Default: " "
-
-        @param pretty bool Indent JSON output. This option should not be used in production.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @return Image search data in JSON format.
-        """
-
         payload = {
             "key": self.api_key,
             "q": q,
@@ -125,84 +93,54 @@ class PixabayAPI:
         resp = get(self.base_url, params=payload)
         if resp.status_code == 200:
             return resp.json()
-        else:
-            raise ValueError(resp.text)
+        raise MaterialAPIError(
+            f"Pixabay 图片搜索请求失败: {resp.text}",
+            service="pixabay",
+            url=resp.url,
+            status_code=resp.status_code,
+        )
 
     def search_video(
         self,
-        q,
-        lang="en",
-        id="",
-        video_type="all",
-        category="",
-        min_width=0,
-        min_height=0,
-        editors_choice="false",
-        safesearch="false",
-        order="popular",
-        page=1,
-        per_page=20,
-        callback="",
-        pretty="false",
-    ):
+        q: str,
+        lang: str = "en",
+        id: str = "",
+        video_type: str = "all",
+        category: str = "",
+        min_width: int = 0,
+        min_height: int = 0,
+        editors_choice: str = "false",
+        safesearch: str = "false",
+        order: str = "popular",
+        page: int = 1,
+        per_page: int = 20,
+        callback: str = "",
+        pretty: str = "false",
+    ) -> dict[str, Any]:
+        """搜索 Pixabay 视频。
+
+        Args:
+            q: 搜索关键词，不超过 100 字符，为空表示返回全部视频。
+            lang: 搜索语言代码（如 en、zh 等）。
+            id: 指定视频 ID / hash ID，多个用逗号分隔。
+            video_type: "all" / "film" / "animation"。
+            category: 分类过滤，如 nature、animals 等。
+            min_width: 最小宽度（像素）。
+            min_height: 最小高度（像素）。
+            editors_choice: 是否仅返回编辑精选，"true" / "false"。
+            safesearch: 是否仅返回全年龄向内容，"true" / "false"。
+            order: 排序方式，"popular" 或 "latest"。
+            page: 页码。
+            per_page: 每页结果数，取值 3-200。
+            callback: JSONP 回调函数名。
+            pretty: 是否缩进输出 JSON，生产环境不建议开启。
+
+        Returns:
+            Pixabay 返回的视频搜索结果（已解析的 JSON）。
+
+        Raises:
+            MaterialAPIError: 请求返回非 200 状态码时抛出，携带 URL 与状态码上下文。
         """
-        Video search
-        @brief Search for Pixabay video using default arguments if no optional arguments supplied.
-        @param q str A URL encoded search term. If omitted, all images are returned. This value may not exceed 100 characters.
-        Example: "cat dog"
-        Default: "yellow flower"
-
-        @param lang str Language code of the language to be searched in.
-        Accepted values: cs, da, de, en, es, fr, id, it, hu, nl, no, pl, pt, ro, sk, fi, sv, tr, vi, th, bg, ru, el, ja, ko, zh
-        Default: "en"
-
-        @param id str ID, hash ID, or a comma separated list of values for retrieving specific images.
-        In a comma separated list, IDs and hash IDs cannot be used together.
-        Default: " "
-
-        @param video_type str Filter results by video type.
-        Accepted values: "all", "film", "animation"
-        Default: "all"
-
-        @param category str  Filter results by category.
-        Accepted values: fashion, nature, backgrounds, science, education, people, feelings, religion, health, places, animals, industry, food, computer, sports, transportation, travel, buildings, business, music
-        Default: " "
-
-        @param min_width int Minimum image width.
-        Default: 0
-
-        @param min_height int Minimum image height.
-        Default: 0
-
-        @param editors_choice bool Select images that have received an Editor's Choice award.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @param safesearch bool A flag indicating that only images suitable for all ages should be returned.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @param order str How the results should be ordered.
-        Accepted values: "popular", "latest"
-        Default: "popular"
-
-        @param page int Returned search results are paginated. Use this parameter to select the page number.
-        Default: 1
-
-        @param per_page int Determine the number of results per page.
-        Accepted values: 3 - 200
-        Default: 20
-
-        @param callback string JSONP callback function name
-        Default: " "
-
-        @param pretty bool Indent JSON output. This option should not be used in production.
-        Accepted values: "true", "false"
-        Default: "false"
-
-        @return Video search data in JSON format.
-        """
-
         payload = {
             "key": self.api_key,
             "q": q,
@@ -224,5 +162,9 @@ class PixabayAPI:
         resp = get(self.base_url + "videos/", params=payload)
         if resp.status_code == 200:
             return resp.json()
-        else:
-            raise ValueError(resp.text)
+        raise MaterialAPIError(
+            f"Pixabay 视频搜索请求失败: {resp.text}",
+            service="pixabay",
+            url=resp.url,
+            status_code=resp.status_code,
+        )

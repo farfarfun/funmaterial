@@ -4,7 +4,10 @@ version = "1.0.26"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [ "fundrive>=2.0.86", "funfake>=1.0.6", "funget>=1.1.63", "funsecret>=1.4.84", "funutil>=1.0.62", "moviepy>=2.0.0", "pillow>=11.3.0", "pydantic>=2.0.0", "requests>=2.32.0",]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "牛哥", email = "farfarfun@qq.com" }]
+dependencies = [ "farlog>=1.1.7", "fundrive>=2.0.86", "funfake>=1.0.6", "funget>=1.1.63", "funsecret>=1.4.84", "moviepy>=2.0.0", "pillow>=11.3.0", "pydantic>=2.0.0", "requests>=2.32.0",]
 
 [build-system]
 requires = ["hatchling"]

@@ -481,11 +481,11 @@ name = "funmaterial"
 version = "1.0.26"
 source = { editable = "." }
 dependencies = [
+    { name = "farlog" },
     { name = "fundrive" },
     { name = "funfake" },
     { name = "funget" },
     { name = "funsecret" },
-    { name = "funutil" },
     { name = "moviepy" },
     { name = "pillow" },
     { name = "pydantic" },
@@ -499,11 +499,11 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "farlog", specifier = ">=1.1.7" },
     { name = "fundrive", specifier = ">=2.0.86" },
     { name = "funfake", specifier = ">=1.0.6" },
     { name = "funget", specifier = ">=1.1.63" },
     { name = "funsecret", specifier = ">=1.4.84" },
-    { name = "funutil", specifier = ">=1.0.62" },
     { name = "moviepy", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=11.3.0" },
     { name = "pydantic", specifier = ">=2.0.0" },
@@ -528,17 +528,6 @@ dependencies = [
 ]
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cf/cf/b8bbd2c8f657043470d65aa6dc7dd635518cc1d5a4f552b1ff0dcfb941b5/funsecret-1.4.93-py3-none-any.whl", hash = "sha256:2d832f5647623a3d07595b4b28c023bbe942535ce4407591ca1cb7531aa20fef", size = 12240, upload-time = "2026-08-27T02:54:15.131Z" },
-]
-
-[[package]]
-name = "funutil"
-version = "1.0.63"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "nltlog" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/de/ff/679f950dd5cea961b33c3ff5ecec1ddb425ddc5e0eb99247e48c53a27118/funutil-1.0.63-py3-none-any.whl", hash = "sha256:443d358b9373fb164312df7440c6fab882f39fe0c07c0e06584655fa06e9e5f0", size = 21935, upload-time = "2026-08-26T15:54:14.788Z" },
 ]
 
 [[package]]
