@@ -56,3 +56,16 @@ photos = Unsplash().search_photos(query="mountain")
 
 - `funmaterial.audio` 和 `funmaterial.picture` 两个子模块目前只有空的 `__init__.py`，尚未实现具体功能。
 - 未提供命令行入口（`pyproject.toml` 中没有 `[project.scripts]`），只能作为 Python 库导入使用。
+
+---
+
+## 关于 farfarfun
+
+[farfarfun](https://github.com/farfarfun) 是一个专注于实用工具库的开源组织，
+涵盖云存储、数据处理、AI、多媒体与开发工具链等方向。
+
+- 🏠 组织主页：<https://github.com/farfarfun>
+- 📦 PyPI：<https://pypi.org/user/niuliangtao/>
+- 📧 联系：farfarfun@qq.com
+
+本项目基于 [MIT](LICENSE) 协议开源。
