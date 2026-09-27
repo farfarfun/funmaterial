@@ -1,12 +1,9 @@
-"""Smoke tests for funmaterial.
+"""funmaterial 冒烟测试。
 
-funmaterial fetches BGM / fonts / stock video / photos from Zenodo, Pexels,
-Pixabay and Unsplash. None of these tests hit the real network: all HTTP /
-remote-drive calls are mocked with ``unittest.mock``.
+funmaterial 从 Zenodo、Pexels、Pixabay 和 Unsplash 获取背景音乐、字体、库存视频和图片。
+这些测试不会访问真实网络，所有 HTTP 和远程驱动调用都使用 ``unittest.mock`` 模拟。
 
-The ``audio`` and ``picture`` submodules are empty stubs (no code beyond an
-empty ``__init__.py``) at the time this suite was written, so they only get a
-basic import check.
+编写本测试时，``audio`` 和 ``picture`` 子模块仍是空桩模块，因此只检查它们能否导入。
 """
 
 from unittest.mock import MagicMock, patch
@@ -14,7 +11,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # ---------------------------------------------------------------------------
-# Imports
+# 导入测试
 # ---------------------------------------------------------------------------
 
 
@@ -32,7 +29,7 @@ def test_import_top_level_package():
     ],
 )
 def test_import_stub_submodules(module_name):
-    """audio/picture are currently empty stub submodules; just confirm they import."""
+    """确认当前为空桩模块的 audio/picture 子模块可以导入。"""
     import importlib
 
     module = importlib.import_module(module_name)
@@ -64,7 +61,7 @@ def test_import_real_submodules(module_name):
 
 
 # ---------------------------------------------------------------------------
-# schema
+# 数据结构
 # ---------------------------------------------------------------------------
 
 
@@ -99,7 +96,7 @@ def test_video_aspect_to_resolution():
 
 
 # ---------------------------------------------------------------------------
-# exceptions
+# 异常
 # ---------------------------------------------------------------------------
 
 
@@ -129,7 +126,7 @@ def test_material_search_error_message_contains_search_term():
 
 
 # ---------------------------------------------------------------------------
-# Pixabay API (requests-based)
+# Pixabay API（基于 requests）
 # ---------------------------------------------------------------------------
 
 
@@ -204,7 +201,7 @@ def test_pixabay_search_video_error_raises_material_api_error():
 
 
 # ---------------------------------------------------------------------------
-# Unsplash API (requests-based)
+# Unsplash API（基于 requests）
 # ---------------------------------------------------------------------------
 
 
@@ -365,7 +362,7 @@ def test_unsplash_stats_total_and_month_mocked():
 
 
 # ---------------------------------------------------------------------------
-# Zenodo-backed font / song fetchers
+# 基于 Zenodo 的字体和歌曲获取器
 # ---------------------------------------------------------------------------
 
 
@@ -416,7 +413,7 @@ def test_random_song_from_zenodo_mocked():
 
 
 # ---------------------------------------------------------------------------
-# to_json
+# JSON 序列化
 # ---------------------------------------------------------------------------
 
 
@@ -442,10 +439,7 @@ def test_to_json_serializes_custom_object_via_dict():
 
 
 def test_to_json_falls_back_to_repr_on_serialization_failure():
-    """A dict subclass whose ``items()`` raises should trigger the
-    ``(TypeError, ValueError)`` fallback path in ``to_json`` rather than
-    propagating the exception, since ``to_json`` is used purely for
-    best-effort diagnostic logging."""
+    """验证 items() 抛出异常的字典子类会触发 to_json 的兜底路径。"""
     from funmaterial.video.download import to_json
 
     class BrokenDict(dict):
@@ -458,7 +452,7 @@ def test_to_json_falls_back_to_repr_on_serialization_failure():
 
 
 # ---------------------------------------------------------------------------
-# save_video
+# 保存视频
 # ---------------------------------------------------------------------------
 
 
@@ -521,7 +515,7 @@ def test_save_video_returns_empty_when_download_produces_no_file(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# Video download engines (Pexels / Pixabay)
+# 视频下载引擎（Pexels / Pixabay）
 # ---------------------------------------------------------------------------
 
 
@@ -565,11 +559,9 @@ def test_pexels_engine_search_video_mocked():
     mock_get.assert_called_once()
     assert len(items) == 1
     assert items[0].url == "http://x/v.mp4"
-    # NOTE: VideoInfo.__init__ (schema/base.py) hardcodes `self.duration = 0`
-    # after super().__init__(), so the *attribute* is always 0 regardless of
-    # the duration passed in. The dict value is still correct though. This
-    # looks like a real upstream bug; documented here rather than fixed, per
-    # audit scope (tests-only).
+    # 注意：VideoInfo.__init__（schema/base.py）在 super().__init__() 后将
+    # self.duration 固定为 0，因此属性值不受传入时长影响，但字典值仍然正确。
+    # 这看起来是上游真实缺陷；按本次审计范围仅在测试中记录，不在此修复。
     assert items[0].duration == 0
     assert items[0]["duration"] == 20
 
@@ -725,9 +717,7 @@ def test_download_videos_pexels_source_uses_mocked_engine():
 
 
 def test_download_videos_skips_failing_search_term_and_continues():
-    """One search term failing with a MaterialSearchError should not abort
-    the whole batch -- the engine logs a warning with context and moves on
-    to the next term."""
+    """验证单个搜索词失败时不会中止整个批处理。"""
     from funmaterial.video import download as download_module
 
     fake_response = MagicMock()
@@ -770,15 +760,14 @@ def test_download_videos_skips_failing_search_term_and_continues():
 
 
 # ---------------------------------------------------------------------------
-# CLI entry point
+# CLI 入口
 # ---------------------------------------------------------------------------
 
 
 def test_no_cli_entry_point_declared():
-    """funmaterial does not declare any [project.scripts] entry point.
+    """funmaterial 未声明 [project.scripts] 入口。
 
-    This test documents that fact rather than skipping silently, so that if
-    a CLI is added later, this test will start failing and prompt an update.
+    本测试显式记录这一事实；后续新增 CLI 时，测试失败会提醒同步更新。
     """
     import tomllib
     from pathlib import Path

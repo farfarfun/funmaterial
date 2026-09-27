@@ -248,7 +248,7 @@ class PexelsEngine(MaterialEngine):
         headers = fake_header()
         headers["Authorization"] = self.api_key
 
-        # Build URL
+        # 构造请求地址
         params = {
             "query": search_term,
             "per_page": 20,
@@ -285,14 +285,14 @@ class PexelsEngine(MaterialEngine):
 
         video_items = []
         videos = response["videos"]
-        # loop through each video in the result
+        # 遍历搜索结果中的视频
         for v in videos:
             duration = v["duration"]
-            # check if video has desired minimum duration
+            # 过滤掉时长不足的视频
             if duration < minimum_duration:
                 continue
             video_files = v["video_files"]
-            # loop through each url to determine the best quality
+            # 遍历视频地址并选择合适的画质
             for video in video_files:
                 w = int(video["width"])
                 h = int(video["height"])
@@ -364,14 +364,14 @@ class PixabayEngine(MaterialEngine):
 
         video_items = []
         videos = response["hits"]
-        # loop through each video in the result
+        # 遍历搜索结果中的视频
         for v in videos:
             duration = v["duration"]
-            # check if video has desired minimum duration
+            # 过滤掉时长不足的视频
             if duration < minimum_duration:
                 continue
             video_files = v["videos"]
-            # loop through each url to determine the best quality
+            # 遍历视频地址并选择合适的画质
             for quality in video_files:
                 video = video_files[quality]
                 w = int(video["width"])
