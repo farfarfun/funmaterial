@@ -23,7 +23,7 @@ def random_font_from_zenodo(record_id: int = 14286964) -> str:
     files = sorted(files, key=lambda f: f["path"])
     font_info = random.choice(files)
 
-    logger.info(f"random font: {font_info['path']}: {font_info}")
+    logger.info("random font: {}: {}", font_info["path"], font_info)
     file_path = f"material/font/{font_info['path']}"
     simple_download(url=font_info["url"], filepath=file_path, prefix="download-font")
     return file_path

@@ -209,6 +209,7 @@ def test_unsplash_list_photos_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = [{"id": "abc123"}]
 
     with patch(
@@ -228,6 +229,7 @@ def test_unsplash_get_photo_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"id": "photo-1"}
 
     with patch(
@@ -244,6 +246,7 @@ def test_unsplash_search_photos_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"results": []}
 
     with patch(
@@ -260,6 +263,7 @@ def test_unsplash_get_photo_random_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"id": "random-photo"}
 
     with patch("funmaterial.api.unsplash.requests.get", return_value=fake_response):
@@ -273,6 +277,7 @@ def test_unsplash_search_collection_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"results": ["collection-1"]}
 
     with patch(
@@ -289,6 +294,7 @@ def test_unsplash_search_users_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"results": ["user-1"]}
 
     with patch(
@@ -305,6 +311,7 @@ def test_unsplash_list_topic_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = [{"id": "topic-1"}]
 
     with patch(
@@ -321,6 +328,7 @@ def test_unsplash_topic_detail_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"id": "topic-1", "slug": "nature"}
 
     with patch(
@@ -337,6 +345,7 @@ def test_unsplash_topic_photos_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = [{"id": "photo-1"}]
 
     with patch(
@@ -353,12 +362,67 @@ def test_unsplash_stats_total_and_month_mocked():
     from funmaterial.api.unsplash import Unsplash
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"photos": 1}
 
     with patch("funmaterial.api.unsplash.requests.get", return_value=fake_response):
         client = Unsplash(access_key="fake-access", secret_key="fake-secret")
         assert client.stats_total() == {"photos": 1}
         assert client.stats_month() == {"photos": 1}
+
+
+def test_unsplash_get_raises_material_api_error_on_http_error():
+    from funmaterial.api.unsplash import Unsplash
+    from funmaterial.exceptions import MaterialAPIError
+
+    fake_response = MagicMock()
+    fake_response.status_code = 403
+    fake_response.text = "Forbidden"
+    fake_response.url = "https://api.unsplash.com/photos"
+
+    with patch("funmaterial.api.unsplash.requests.get", return_value=fake_response):
+        client = Unsplash(access_key="fake-access", secret_key="fake-secret")
+        with pytest.raises(MaterialAPIError) as exc_info:
+            client.list_photos()
+
+    assert exc_info.value.service == "unsplash"
+    assert exc_info.value.status_code == 403
+
+
+def test_unsplash_get_raises_material_api_error_on_network_error():
+    import requests
+
+    from funmaterial.api.unsplash import Unsplash
+    from funmaterial.exceptions import MaterialAPIError
+
+    with patch(
+        "funmaterial.api.unsplash.requests.get",
+        side_effect=requests.ConnectionError("network down"),
+    ):
+        client = Unsplash(access_key="fake-access", secret_key="fake-secret")
+        with pytest.raises(MaterialAPIError) as exc_info:
+            client.list_photos()
+
+    assert exc_info.value.service == "unsplash"
+    assert isinstance(exc_info.value.__cause__, requests.ConnectionError)
+
+
+def test_unsplash_get_raises_material_api_error_on_invalid_json():
+    from funmaterial.api.unsplash import Unsplash
+    from funmaterial.exceptions import MaterialAPIError
+
+    fake_response = MagicMock()
+    fake_response.status_code = 200
+    fake_response.json.side_effect = ValueError("not json")
+    fake_response.url = "https://api.unsplash.com/photos"
+
+    with patch("funmaterial.api.unsplash.requests.get", return_value=fake_response):
+        client = Unsplash(access_key="fake-access", secret_key="fake-secret")
+        with pytest.raises(MaterialAPIError) as exc_info:
+            client.list_photos()
+
+    assert exc_info.value.service == "unsplash"
+    assert exc_info.value.status_code == 200
 
 
 # ---------------------------------------------------------------------------
@@ -436,6 +500,22 @@ def test_to_json_serializes_custom_object_via_dict():
     result = to_json(Custom())
     assert '"x": 1' in result
     assert '"y": "text"' in result
+
+
+def test_to_json_uses_repr_for_unrecognized_object_instead_of_null():
+    """不支持且没有 __dict__ 的对象应保留 repr，不能被静默转换成 JSON null。"""
+    from funmaterial.video.download import to_json
+
+    class NoDictSlots:
+        __slots__ = ()
+
+        def __repr__(self):
+            return "<NoDictSlots marker>"
+
+    unknown = NoDictSlots()
+    result = to_json({"item": unknown})
+    assert "<NoDictSlots marker>" in result
+    assert "null" not in result
 
 
 def test_to_json_falls_back_to_repr_on_serialization_failure():
@@ -559,10 +639,8 @@ def test_pexels_engine_search_video_mocked():
     mock_get.assert_called_once()
     assert len(items) == 1
     assert items[0].url == "http://x/v.mp4"
-    # 注意：VideoInfo.__init__（schema/base.py）在 super().__init__() 后将
-    # self.duration 固定为 0，因此属性值不受传入时长影响，但字典值仍然正确。
-    # 这看起来是上游真实缺陷；按本次审计范围仅在测试中记录，不在此修复。
-    assert items[0].duration == 0
+    # VideoInfo.duration 属性与字典值均应保留调用方传入的时长。
+    assert items[0].duration == 20
     assert items[0]["duration"] == 20
 
 
@@ -675,6 +753,24 @@ def test_pixabay_engine_search_video_raises_on_http_error():
     assert exc_info.value.search_term == "cat"
     assert exc_info.value.service == "pixabay"
     assert isinstance(exc_info.value.__cause__, Exception)
+
+
+def test_pixabay_engine_search_video_does_not_mask_programming_errors():
+    """非请求类异常（如代码缺陷）不应被伪装成 MaterialSearchError。"""
+    from funmaterial.video.download import PixabayEngine
+    from funmaterial.video.schema import VideoAspect
+
+    with patch(
+        "funmaterial.api.pixabay.get",
+        side_effect=TypeError("unexpected programming error"),
+    ):
+        engine = PixabayEngine(api_key="fake-key")
+        with pytest.raises(TypeError):
+            engine.search_video(
+                search_term="cat",
+                minimum_duration=5,
+                video_aspect=VideoAspect.portrait,
+            )
 
 
 def test_download_videos_unknown_source_returns_none():

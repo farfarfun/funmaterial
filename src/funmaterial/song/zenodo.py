@@ -23,7 +23,7 @@ def random_song_from_zenodo(record_id: int = 14286359) -> str:
     files = sorted(files, key=lambda f: f["path"])
     song_info = random.choice(files)
 
-    logger.info(f"random song: {song_info['path']}: {song_info}")
+    logger.info("random song: {}: {}", song_info["path"], song_info)
     file_path = f"material/song/{song_info['path']}"
     simple_download(url=song_info["url"], filepath=file_path, prefix="download-song")
     return file_path

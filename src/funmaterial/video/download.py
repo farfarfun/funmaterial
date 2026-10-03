@@ -14,7 +14,7 @@ from funget import simple_download
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 from funmaterial.api.pixabay import PixabayAPI
-from funmaterial.exceptions import MaterialSearchError
+from funmaterial.exceptions import MaterialAPIError, MaterialSearchError
 from funmaterial.schema import ProviderType, VideoInfo
 from funmaterial.video.schema import VideoAspect, VideoConcatMode
 
@@ -51,8 +51,8 @@ def save_video(video_url: str, save_dir: str = "", *args: Any, **kwargs: Any) ->
             try:
                 os.remove(video_path)
             except OSError as remove_error:
-                logger.error(f"failed to remove {video_path}: {remove_error}")
-            logger.warning(f"invalid video file: {video_path} => {e}")
+                logger.error("failed to remove {}: {}", video_path, remove_error)
+            logger.warning("invalid video file: {} => {}", video_path, e)
     return ""
 
 
@@ -131,9 +131,9 @@ class MaterialEngine:
                     video_aspect=video_aspect,
                 )
             except MaterialSearchError as e:
-                logger.warning(f"skip search term due to search failure: {e}")
+                logger.warning("skip search term due to search failure: {}", e)
                 continue
-            logger.info(f"found {len(video_items)} videos for '{search_term}'")
+            logger.info("found {} videos for '{}'", len(video_items), search_term)
 
             for item in video_items:
                 if item.url not in valid_video_urls:
@@ -142,7 +142,10 @@ class MaterialEngine:
                     found_duration += item.duration
 
         logger.info(
-            f"found total videos: {len(valid_video_items)}, required duration: {audio_duration} seconds, found duration: {found_duration} seconds"
+            "found total videos: {}, required duration: {} seconds, found duration: {} seconds",
+            len(valid_video_items),
+            audio_duration,
+            found_duration,
         )
         video_paths = []
         os.makedirs(material_directory, exist_ok=True)
@@ -152,21 +155,22 @@ class MaterialEngine:
 
         total_duration = 0.0
         for item in valid_video_items:
-            logger.info(f"downloading video: {item.url}")
+            logger.info("downloading video: {}", item.url)
             saved_video_path = save_video(
                 video_url=item.url, save_dir=material_directory
             )
             if saved_video_path:
-                logger.info(f"video saved: {saved_video_path}")
+                logger.info("video saved: {}", saved_video_path)
                 video_paths.append(saved_video_path)
                 seconds = min(max_clip_duration, item.duration)
                 total_duration += seconds
                 if total_duration > audio_duration:
                     logger.info(
-                        f"total duration of downloaded videos: {total_duration} seconds, skip downloading more"
+                        "total duration of downloaded videos: {} seconds, skip downloading more",
+                        total_duration,
                     )
                     break
-        logger.success(f"downloaded {len(video_paths)} videos")
+        logger.success("downloaded {} videos", len(video_paths))
         return video_paths
 
 
@@ -200,15 +204,16 @@ def to_json(obj: Any) -> str:
         # 如果对象是自定义类型，尝试返回其 __dict__ 属性
         elif hasattr(o, "__dict__"):
             return serialize(o.__dict__)
-        # 其他情况返回 None
+        # 其他无法识别的类型：不能静默转换为 JSON null，否则会丢失原始值，
+        # 返回可定位的 repr 兜底
         else:
-            return None
+            return repr(o)
 
     try:
         serialized_obj = serialize(obj)
         return json.dumps(serialized_obj, ensure_ascii=False, indent=4)
     except (TypeError, ValueError) as e:
-        logger.warning(f"failed to serialize object of type {type(obj)!r}: {e}")
+        logger.warning("failed to serialize object of type {!r}: {}", type(obj), e)
         return repr(obj)
 
 
@@ -255,7 +260,7 @@ class PexelsEngine(MaterialEngine):
             "orientation": video_orientation,
         }
         query_url = f"https://api.pexels.com/videos/search?{urlencode(params)}"
-        logger.info(f"searching videos: {query_url}, with proxies: {proxy}")
+        logger.info("searching videos: {}, with proxies: {}", query_url, proxy)
 
         try:
             r = requests.get(
@@ -348,7 +353,7 @@ class PixabayEngine(MaterialEngine):
             response = PixabayAPI(api_key=self.api_key).search_video(
                 q=search_term, video_type=video_type, per_page=per_page
             )
-        except Exception as e:
+        except (MaterialAPIError, requests.RequestException) as e:
             raise MaterialSearchError(
                 "Pixabay 视频搜索请求异常",
                 service="pixabay",

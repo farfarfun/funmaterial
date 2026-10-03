@@ -1,7 +1,7 @@
 [project]
 name = "funmaterial"
 version = "1.0.26"
-description = "Add your description here"
+description = "素材获取工具库，从 Zenodo、Pexels、Pixabay、Unsplash 拉取视频、背景音乐、字体等素材"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
@@ -15,3 +15,10 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [ "pytest>=8.0.0",]
+
+[tool.ruff.lint]
+ignore = [
+    # farlog（基于 loguru）的日志调用用 `{}` 占位符传参，不是 stdlib logging 的
+    # `%s` 语法；ruff 把 logger 调用当成 stdlib logging 处理，误判为参数过多。
+    "PLE1205",
+]

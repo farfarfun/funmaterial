@@ -5,6 +5,8 @@ from typing import Any
 import requests
 from funsecret import read_secret
 
+from funmaterial.exceptions import MaterialAPIError
+
 
 class Unsplash:
     """Unsplash 图片搜索客户端。
@@ -40,9 +42,37 @@ class Unsplash:
 
         Returns:
             响应体解析后的 JSON 数据。
+
+        Raises:
+            MaterialAPIError: 网络异常、非 200 状态码或响应不是合法 JSON 时抛出，
+                携带 service、url、status_code 上下文。
         """
         params["client_id"] = self.access_key
-        return requests.get(f"{self.base_url}/{uri}", params=params).json()
+        url = f"{self.base_url}/{uri}"
+        try:
+            resp = requests.get(url, params=params, timeout=(30, 60))
+        except requests.RequestException as e:
+            raise MaterialAPIError(
+                "Unsplash 请求异常", service="unsplash", url=url
+            ) from e
+
+        if resp.status_code != 200:
+            raise MaterialAPIError(
+                f"Unsplash 请求失败: {resp.text}",
+                service="unsplash",
+                url=resp.url,
+                status_code=resp.status_code,
+            )
+
+        try:
+            return resp.json()
+        except ValueError as e:
+            raise MaterialAPIError(
+                "Unsplash 响应不是合法 JSON",
+                service="unsplash",
+                url=resp.url,
+                status_code=resp.status_code,
+            ) from e
 
     def list_photos(self, page: int = 1, per_page: int = 10) -> Any:
         """获取图片列表。

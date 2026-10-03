@@ -46,9 +46,16 @@ class VideoInfo(MaterialInfo):
     """视频素材信息。"""
 
     def __init__(self, *args: object, **kwargs: object) -> None:
-        """初始化视频素材信息。"""
+        """初始化视频素材信息。
+
+        Args:
+            *args: 传递给 `MaterialInfo` 的额外位置参数。
+            **kwargs: 传递给 `MaterialInfo` 的额外字段，支持 `duration`
+                （视频时长，单位秒），缺省为 0。
+        """
+        duration = kwargs.get("duration", 0)
         super().__init__(type=MaterialType.VIDEO, *args, **kwargs)
-        self.duration: int = 0
+        self.duration: int = duration
 
 
 class AudioInfo(MaterialInfo):
