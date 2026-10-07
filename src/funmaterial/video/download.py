@@ -37,7 +37,16 @@ def save_video(video_url: str, save_dir: str = "", *args: Any, **kwargs: Any) ->
     url_without_query = video_url.split("?")[0]
     url_hash = hashlib.md5(url_without_query.encode("utf-8")).hexdigest()
     video_path = f"{save_dir}/vid-{url_hash}.mp4"
-    simple_download(url=video_url, filepath=video_path, overwrite=False)
+    try:
+        simple_download(url=video_url, filepath=video_path, overwrite=False)
+    except Exception as e:  # noqa: BLE001 -- 下载器未定义稳定的异常层级
+        logger.warning(
+            "failed to download video: url={}, path={}, error={}",
+            video_url,
+            video_path,
+            e,
+        )
+        return ""
 
     if os.path.exists(video_path) and os.path.getsize(video_path) > 0:
         try:
@@ -278,8 +287,29 @@ class PexelsEngine(MaterialEngine):
                 url=query_url,
             ) from e
 
-        response = r.json()
-        if "videos" not in response:
+        if r.status_code < 200 or r.status_code >= 300:
+            raise MaterialSearchError(
+                f"Pexels 视频搜索请求失败: {r.text}",
+                service="pexels",
+                search_term=search_term,
+                url=query_url,
+                status_code=r.status_code,
+            )
+
+        try:
+            response = r.json()
+        except ValueError as e:
+            raise MaterialSearchError(
+                "Pexels 视频搜索响应不是合法 JSON",
+                service="pexels",
+                search_term=search_term,
+                url=query_url,
+                status_code=r.status_code,
+            ) from e
+
+        if not isinstance(response, dict) or not isinstance(
+            response.get("videos"), list
+        ):
             raise MaterialSearchError(
                 f"Pexels 视频搜索响应缺少 videos 字段: {response}",
                 service="pexels",
@@ -288,27 +318,36 @@ class PexelsEngine(MaterialEngine):
                 status_code=r.status_code,
             )
 
-        video_items = []
-        videos = response["videos"]
-        # 遍历搜索结果中的视频
-        for v in videos:
-            duration = v["duration"]
-            # 过滤掉时长不足的视频
-            if duration < minimum_duration:
-                continue
-            video_files = v["video_files"]
-            # 遍历视频地址并选择合适的画质
-            for video in video_files:
-                w = int(video["width"])
-                h = int(video["height"])
-                if w == video_width and h == video_height:
-                    item = VideoInfo(
-                        provider=ProviderType.PEXELS,
-                        url=video["link"],
-                        duration=duration,
-                    )
-                    video_items.append(item)
-                    break
+        try:
+            video_items = []
+            videos = response["videos"]
+            # 遍历搜索结果中的视频
+            for v in videos:
+                duration = v["duration"]
+                # 过滤掉时长不足的视频
+                if duration < minimum_duration:
+                    continue
+                video_files = v["video_files"]
+                # 遍历视频地址并选择合适的画质
+                for video in video_files:
+                    w = int(video["width"])
+                    h = int(video["height"])
+                    if w == video_width and h == video_height:
+                        item = VideoInfo(
+                            provider=ProviderType.PEXELS,
+                            url=video["link"],
+                            duration=duration,
+                        )
+                        video_items.append(item)
+                        break
+        except (KeyError, TypeError, ValueError) as e:
+            raise MaterialSearchError(
+                "Pexels 视频搜索响应格式不符合预期",
+                service="pexels",
+                search_term=search_term,
+                url=query_url,
+                status_code=r.status_code,
+            ) from e
         return video_items
 
 

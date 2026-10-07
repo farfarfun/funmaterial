@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from funsecret import read_secret
-from requests import get
+from requests import RequestException, get
 
 from funmaterial.exceptions import MaterialAPIError
 
@@ -68,7 +68,8 @@ class PixabayAPI:
             Pixabay 返回的图片搜索结果（已解析的 JSON）。
 
         Raises:
-            MaterialAPIError: 请求返回非 200 状态码时抛出，携带 URL 与状态码上下文。
+            MaterialAPIError: 网络异常、非 200 状态码或响应不是合法 JSON 时抛出，
+                携带 URL 与状态码上下文。
         """
         payload = {
             "key": self.api_key,
@@ -90,9 +91,22 @@ class PixabayAPI:
             "pretty": pretty,
         }
 
-        resp = get(self.base_url, params=payload)
+        try:
+            resp = get(self.base_url, params=payload, timeout=(30, 60))
+        except RequestException as e:
+            raise MaterialAPIError(
+                "Pixabay 图片搜索请求异常", service="pixabay", url=self.base_url
+            ) from e
         if resp.status_code == 200:
-            return resp.json()
+            try:
+                return resp.json()
+            except ValueError as e:
+                raise MaterialAPIError(
+                    "Pixabay 图片搜索响应不是合法 JSON",
+                    service="pixabay",
+                    url=resp.url,
+                    status_code=resp.status_code,
+                ) from e
         raise MaterialAPIError(
             f"Pixabay 图片搜索请求失败: {resp.text}",
             service="pixabay",
@@ -139,7 +153,8 @@ class PixabayAPI:
             Pixabay 返回的视频搜索结果（已解析的 JSON）。
 
         Raises:
-            MaterialAPIError: 请求返回非 200 状态码时抛出，携带 URL 与状态码上下文。
+            MaterialAPIError: 网络异常、非 200 状态码或响应不是合法 JSON 时抛出，
+                携带 URL 与状态码上下文。
         """
         payload = {
             "key": self.api_key,
@@ -159,9 +174,23 @@ class PixabayAPI:
             "pretty": pretty,
         }
 
-        resp = get(self.base_url + "videos/", params=payload)
+        url = self.base_url + "videos/"
+        try:
+            resp = get(url, params=payload, timeout=(30, 60))
+        except RequestException as e:
+            raise MaterialAPIError(
+                "Pixabay 视频搜索请求异常", service="pixabay", url=url
+            ) from e
         if resp.status_code == 200:
-            return resp.json()
+            try:
+                return resp.json()
+            except ValueError as e:
+                raise MaterialAPIError(
+                    "Pixabay 视频搜索响应不是合法 JSON",
+                    service="pixabay",
+                    url=resp.url,
+                    status_code=resp.status_code,
+                ) from e
         raise MaterialAPIError(
             f"Pixabay 视频搜索请求失败: {resp.text}",
             service="pixabay",

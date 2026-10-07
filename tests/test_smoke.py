@@ -200,6 +200,39 @@ def test_pixabay_search_video_error_raises_material_api_error():
     assert exc_info.value.status_code == 500
 
 
+def test_pixabay_search_image_raises_material_api_error_on_network_error():
+    import requests
+
+    from funmaterial.api.pixabay import PixabayAPI
+    from funmaterial.exceptions import MaterialAPIError
+
+    with patch(
+        "funmaterial.api.pixabay.get",
+        side_effect=requests.ConnectionError("network down"),
+    ):
+        with pytest.raises(MaterialAPIError) as exc_info:
+            PixabayAPI(api_key="fake-key").search_image(q="cat")
+
+    assert exc_info.value.service == "pixabay"
+    assert exc_info.value.url == "https://pixabay.com/api/"
+    assert isinstance(exc_info.value.__cause__, requests.ConnectionError)
+
+
+def test_pixabay_search_video_raises_material_api_error_on_invalid_json():
+    from funmaterial.api.pixabay import PixabayAPI
+    from funmaterial.exceptions import MaterialAPIError
+
+    fake_response = MagicMock(status_code=200, url="https://pixabay.com/api/videos/")
+    fake_response.json.side_effect = ValueError("not json")
+
+    with patch("funmaterial.api.pixabay.get", return_value=fake_response):
+        with pytest.raises(MaterialAPIError) as exc_info:
+            PixabayAPI(api_key="fake-key").search_video(q="cat")
+
+    assert exc_info.value.service == "pixabay"
+    assert exc_info.value.status_code == 200
+
+
 # ---------------------------------------------------------------------------
 # Unsplash API（基于 requests）
 # ---------------------------------------------------------------------------
@@ -594,6 +627,19 @@ def test_save_video_returns_empty_when_download_produces_no_file(tmp_path):
     assert result == ""
 
 
+def test_save_video_returns_empty_when_downloader_raises(tmp_path):
+    from funmaterial.video import download as download_module
+
+    with patch.object(
+        download_module, "simple_download", side_effect=OSError("network down")
+    ):
+        result = download_module.save_video(
+            "http://x/video.mp4", save_dir=str(tmp_path)
+        )
+
+    assert result == ""
+
+
 # ---------------------------------------------------------------------------
 # 视频下载引擎（Pexels / Pixabay）
 # ---------------------------------------------------------------------------
@@ -615,6 +661,7 @@ def test_pexels_engine_search_video_mocked():
     from funmaterial.video.schema import VideoAspect
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {
         "videos": [
             {
@@ -650,6 +697,7 @@ def test_pexels_engine_search_video_raises_on_missing_videos_key():
     from funmaterial.video.schema import VideoAspect
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {"error": "bad request"}
 
     with patch("funmaterial.video.download.requests.get", return_value=fake_response):
@@ -686,6 +734,42 @@ def test_pexels_engine_search_video_raises_on_request_exception():
 
     assert exc_info.value.__cause__ is not None
     assert isinstance(exc_info.value.__cause__, requests.ConnectionError)
+
+
+def test_pexels_engine_search_video_raises_on_http_error():
+    from funmaterial.exceptions import MaterialSearchError
+    from funmaterial.video.download import PexelsEngine
+    from funmaterial.video.schema import VideoAspect
+
+    fake_response = MagicMock(status_code=503, text="Service Unavailable")
+
+    with patch("funmaterial.video.download.requests.get", return_value=fake_response):
+        with pytest.raises(MaterialSearchError) as exc_info:
+            PexelsEngine(api_key="fake-key").search_video(
+                search_term="cat", minimum_duration=5, video_aspect=VideoAspect.portrait
+            )
+
+    assert exc_info.value.service == "pexels"
+    assert exc_info.value.search_term == "cat"
+    assert exc_info.value.status_code == 503
+
+
+def test_pexels_engine_search_video_raises_on_invalid_json():
+    from funmaterial.exceptions import MaterialSearchError
+    from funmaterial.video.download import PexelsEngine
+    from funmaterial.video.schema import VideoAspect
+
+    fake_response = MagicMock(status_code=200)
+    fake_response.json.side_effect = ValueError("not json")
+
+    with patch("funmaterial.video.download.requests.get", return_value=fake_response):
+        with pytest.raises(MaterialSearchError) as exc_info:
+            PexelsEngine(api_key="fake-key").search_video(
+                search_term="cat", minimum_duration=5, video_aspect=VideoAspect.portrait
+            )
+
+    assert exc_info.value.service == "pexels"
+    assert exc_info.value.status_code == 200
 
 
 def test_pixabay_engine_search_video_mocked():
@@ -784,6 +868,7 @@ def test_download_videos_pexels_source_uses_mocked_engine():
     from funmaterial.video import download as download_module
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {
         "videos": [
             {
@@ -817,6 +902,7 @@ def test_download_videos_skips_failing_search_term_and_continues():
     from funmaterial.video import download as download_module
 
     fake_response = MagicMock()
+    fake_response.status_code = 200
     fake_response.json.return_value = {
         "videos": [
             {
@@ -834,6 +920,7 @@ def test_download_videos_skips_failing_search_term_and_continues():
         call_count["n"] += 1
         if call_count["n"] == 1:
             bad = MagicMock()
+            bad.status_code = 200
             bad.json.return_value = {"error": "bad request"}
             return bad
         return fake_response
