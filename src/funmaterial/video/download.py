@@ -231,6 +231,7 @@ class PexelsEngine(MaterialEngine):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self.api_key = self.api_key or os.getenv("FUNMATERIAL_PEXELS_API_KEY")
 
     def search_video(
         self,
@@ -276,7 +277,6 @@ class PexelsEngine(MaterialEngine):
                 query_url,
                 headers=headers,
                 proxies=proxy,
-                verify=False,
                 timeout=(30, 60),
             )
         except requests.RequestException as e:
@@ -443,8 +443,8 @@ class PixabayEngine(MaterialEngine):
 
 
 def download_videos(
-    api_key: str,
-    search_terms: list[str],
+    api_key: str | None = None,
+    search_terms: list[str] | None = None,
     source: str = "pexels",
     material_directory: str = "./material/video",
     video_aspect: VideoAspect = VideoAspect.portrait,
@@ -455,7 +455,9 @@ def download_videos(
     """按来源批量搜索并下载视频素材。
 
     Args:
-        api_key: 目标素材服务的 API key。
+        api_key: 目标素材服务的 API key。未传时，Pexels 从
+            `FUNMATERIAL_PEXELS_API_KEY` 环境变量读取；Pixabay 仍使用其
+            `FUNMATERIAL_PIXABAY_API_KEY` 环境变量或 `funsecret` 配置。
         search_terms: 搜索关键词列表。
         source: 素材来源，支持 "pexels" 或 "pixabay"。
         material_directory: 视频保存目录。
@@ -467,6 +469,9 @@ def download_videos(
     Returns:
         成功下载并通过校验的本地视频文件路径列表；`source` 不受支持时返回 `None`。
     """
+    if search_terms is None:
+        raise ValueError("search_terms is required")
+
     engine: MaterialEngine | None = None
     if source == "pexels":
         engine = PexelsEngine(api_key=api_key)
