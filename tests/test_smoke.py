@@ -691,6 +691,32 @@ def test_pexels_engine_search_video_mocked():
     assert items[0]["duration"] == 20
 
 
+def test_pexels_engine_uses_tls_verification_and_environment_api_key(monkeypatch):
+    from funmaterial.video.download import PexelsEngine
+    from funmaterial.video.schema import VideoAspect
+
+    monkeypatch.setenv("FUNMATERIAL_PEXELS_API_KEY", "environment-key")
+    fake_response = MagicMock(status_code=200)
+    fake_response.json.return_value = {"videos": []}
+
+    with patch(
+        "funmaterial.video.download.requests.get", return_value=fake_response
+    ) as mock_get:
+        PexelsEngine().search_video(
+            search_term="cat", minimum_duration=5, video_aspect=VideoAspect.portrait
+        )
+
+    assert mock_get.call_args.kwargs["headers"]["Authorization"] == "environment-key"
+    assert "verify" not in mock_get.call_args.kwargs
+
+
+def test_pixabay_api_uses_environment_api_key(monkeypatch):
+    from funmaterial.api.pixabay import PixabayAPI
+
+    monkeypatch.setenv("FUNMATERIAL_PIXABAY_API_KEY", "environment-key")
+    assert PixabayAPI().api_key == "environment-key"
+
+
 def test_pexels_engine_search_video_raises_on_missing_videos_key():
     from funmaterial.exceptions import MaterialSearchError
     from funmaterial.video.download import PexelsEngine

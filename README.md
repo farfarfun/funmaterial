@@ -22,12 +22,18 @@ font_path = random_font_from_zenodo()  # 默认 record_id=14286964，随机下�
 
 ### 按关键词搜索并下载视频素材（Pexels / Pixabay）
 
+先通过环境变量配置对应服务的 API key：
+
+```bash
+export FUNMATERIAL_PEXELS_API_KEY="..."
+# 使用 Pixabay 时：export FUNMATERIAL_PIXABAY_API_KEY="..."
+```
+
 ```python
 from funmaterial.video.download import download_videos
 from funmaterial.video.schema import VideoAspect, VideoConcatMode
 
 video_paths = download_videos(
-    api_key="your-pexels-or-pixabay-key",
     search_terms=["city night", "rain"],
     source="pexels",  # 或 "pixabay"
     material_directory="./material/video",
@@ -45,8 +51,9 @@ video_paths = download_videos(
 from funmaterial.api.pixabay import PixabayAPI
 from funmaterial.api.unsplash import Unsplash
 
-# api_key 未传时，会通过 funsecret 读取 "funmaterial"/"pixabay"/"api_key"
-images = PixabayAPI(api_key="your-key").search_image(q="cat")
+# 读取 FUNMATERIAL_PIXABAY_API_KEY；未设置时会通过 funsecret 读取
+# "funmaterial"/"pixabay"/"api_key"
+images = PixabayAPI().search_image(q="cat")
 
 # access_key/secret_key 未传时，会通过 funsecret 读取 "funmaterial"/"unsplash"/"access_key" 和 "secret_key"
 photos = Unsplash().search_photos(query="mountain")

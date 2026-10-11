@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from funsecret import read_secret
@@ -22,7 +23,11 @@ class PixabayAPI:
                 https://pixabay.com/en/accounts/register/ 。
             base_url: Pixabay API 根地址。
         """
-        self.api_key = api_key or read_secret("funmaterial", "pixabay", "api_key")
+        self.api_key = (
+            api_key
+            or os.getenv("FUNMATERIAL_PIXABAY_API_KEY")
+            or read_secret("funmaterial", "pixabay", "api_key")
+        )
         self.base_url = base_url
 
     def search_image(
